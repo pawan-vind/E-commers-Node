@@ -15,6 +15,7 @@ const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
+const nodemailer = require("nodemailer");
 const { User } = require("./Model/user");
 const LocalStrategy = require("passport-local").Strategy;
 const crypto = require("crypto");
@@ -26,6 +27,10 @@ const path = require("path");
 const { Order } = require("./Model/order");
 
 // email
+
+
+
+
 
 // webhook
 

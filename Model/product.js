@@ -10,8 +10,8 @@ stock: {type: Number, min:[0, "Wrong min stock"],},
 rating: {type: Number, min:[0, "Wrong min rating"], max:[5, "Wrong max rating"], default:0,},
 brand: {type : String, require: true},
 category: {type : String, require: true},
-thumbnail: {type : String, require: true},
-images: {type : [String], require: true},
+images: { type: [String] }, // Array of image paths
+thumbnail: { type: String }, // Single image path
 deleted: {type : Boolean,  default: false},
 })
 

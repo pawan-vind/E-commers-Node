@@ -94,8 +94,10 @@ server.use(
     exposedHeaders: ["X-Total-Count"],
   })
 );
+
 server.use(passport.initialize());
 server.use(express.json());
+server.use("/uploads", express.static("uploads"));
 server.use("/products", isAuth(), productRouter.router);
 server.use("/brands", isAuth(), brandsRouter.router);
 server.use("/categories", isAuth(), categoryRouter.router);
@@ -217,5 +219,5 @@ async function main() {
 }
 
 server.listen(process.env.PORT, () => {
-  console.log("Server sta");
+  console.log(`Server start on port ${process.env.PORT}`);
 });

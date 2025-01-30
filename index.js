@@ -28,10 +28,6 @@ const { Order } = require("./Model/order");
 
 // email
 
-
-
-
-
 // webhook
 
 const endpointSecret = process.env.ENDPOINTSECURATE;
@@ -97,7 +93,7 @@ server.use(
 
 server.use(passport.initialize());
 server.use(express.json());
-server.use("/uploads", express.static("uploads"));
+server.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 server.use("/products", isAuth(), productRouter.router);
 server.use("/brands", isAuth(), brandsRouter.router);
 server.use("/categories", isAuth(), categoryRouter.router);

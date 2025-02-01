@@ -1,18 +1,18 @@
 const { Product } = require("../Model/product");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads"); // Ensure the folder is correct
+    cb(null, 'uploads');
   },
   filename: (req, file, cb) => {
-    cb(
-      null,
-      `${Date.now()}${path.extname(file.originalname)}`.replace(/\\/g, "/")
-    );
+    const uniqueName = `${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
   },
 });
+
 
 const upload = multer({
   storage: storage,
@@ -31,50 +31,65 @@ const upload = multer({
   },
 });
 
+const uploadDir = "uploads";
+
+// Ensure the upload directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+
+// Export middleware
+exports.uploadProductImages = upload.fields([
+  { name: "image1", maxCount: 1 },
+  { name: "image2", maxCount: 1 },
+  { name: "image3", maxCount: 1 },
+  { name: "image4", maxCount: 1 },
+  { name: "thumbnail", maxCount: 1 },
+]);
+
 exports.createProduct = async (req, res) => {
-  console.log("wwwwwwww");
-  // Handle the uploaded files using Multer
-  upload.fields([
-    { name: "image1", maxCount: 1 },
-    { name: "image2", maxCount: 1 },
-    { name: "image3", maxCount: 1 },
-    { name: "image4", maxCount: 1 },
-    { name: "thumbnail", maxCount: 1 },
-  ])(req, res, async (err) => {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ error: err.message });
-    } else if (err) {
-      return res.status(400).json({ error: err.message });
+  try {
+    console.log("Product creation initiated...");
+
+    if (!req.files) {
+      return res.status(400).json({ error: "No files uploaded" });
     }
 
-    try {
-      // Collect image paths from the uploaded files
-      const images = [
-        req.files.image1 ? req.files.image1[0].path : null,
-        req.files.image2 ? req.files.image2[0].path : null,
-        req.files.image3 ? req.files.image3[0].path : null,
-        req.files.image4 ? req.files.image4[0].path : null,
-      ];
-      const thumbnail = req.files.thumbnail
-        ? req.files.thumbnail[0].path
-        : null;
+    // Normalize file paths
+    const normalizePath = (file) => (file ? file.path.replace(/\\/g, "/") : null);
 
-      // Create the product object
-      const productData = {
-        ...req.body,
-        images,
-        thumbnail,
-      };
+    const images = [
+      normalizePath(req.files.image1?.[0]),
+      normalizePath(req.files.image2?.[0]),
+      normalizePath(req.files.image3?.[0]),
+      normalizePath(req.files.image4?.[0]),
+    ].filter(Boolean); // Remove null values
 
-      // Save the product to the database
-      const product = new Product(productData);
-      const doc = await product.save();
-      res.status(201).send(doc);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    const thumbnail = normalizePath(req.files.thumbnail?.[0]);
+
+    // Validate at least one image exists
+    if (images.length === 0 && !thumbnail) {
+      return res.status(400).json({ error: "At least one image is required" });
     }
-  });
+
+    // Create product object
+    const productData = {
+      ...req.body,
+      images,
+      thumbnail,
+    };
+
+    // Save product to the database
+    const product = new Product(productData);
+    const doc = await product.save();
+    res.status(201).json({ message: "Product created successfully", product: doc });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
+
 
 exports.fetchAllProducts = async (req, res) => {
   // filter = {"category:["smartphone", "laptops"]}
@@ -83,7 +98,7 @@ exports.fetchAllProducts = async (req, res) => {
   let condition = {};
   if (!req.query.admin) {
     condition.deleted = { $ne: true };
-  }
+  } 
 
   let query = Product.find(condition);
   let totalProductQuery = Product.find(condition);
